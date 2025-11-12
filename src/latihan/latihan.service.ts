@@ -55,93 +55,71 @@ export class LatihanService {
     }
   }
 
-  async getLatihan(query): Promise<ResponseSuccess> {
-    const {
-      title,
-      name,
-      kelas,
-      alamat,
-      umur,
-      pekerjaan,
-      hobi,
-      status,
-      keyword,
-    } = query;
+  async getLatihan(query): Promise<any> {
+  const {
+    title,
+    name,
+    kelas,
+    alamat,
+    umur,
+    pekerjaan,
+    hobi,
+    status,
+    keyword,
+    page = 1,
+    limit = 10,
+  } = query;
 
-    const filterQuery: any = {};
-    const keywordQuery: any = [];
+  const filterQuery: any = {};
+  const keywordQuery: any = [];
 
-    if (keyword) {
-      keywordQuery.push(
-        {
-          title: Like(`%${keyword}%`),
-        },
-        {
-          name: Like(`%${keyword}%`),
-        },
-        {
-          kelas: Like(`%${keyword}%`),
-        },
-        {
-          alamat: Like(`%${keyword}%`),
-        },
-        {
-          umur: Like(`%${keyword}%`),
-        },
-        {
-          pekerjaan: Like(`%${keyword}%`),
-        },
-        {
-          hobi: Like(`%${keyword}%`),
-        },
-        {
-          status: Like(`%${keyword}%`),
-        },
-      );
-    }
-
-    if (title) {
-      filterQuery.title = Like(`%${title}%`);
-    }
-
-    if (name) {
-      filterQuery.name = Like(`%${name}%`);
-    }
-
-    if (kelas) {
-      filterQuery.kelas = Like(`%${kelas}%`);
-    }
-
-    if (alamat) {
-      filterQuery.alamat = Like(`%${alamat}%`);
-    }
-
-    if (umur) {
-      filterQuery.umur = Like(`%${umur}%`);
-    }
-
-    if (pekerjaan) {
-      filterQuery.pekerjaan = Like(`%${pekerjaan}%`);
-    }
-
-    if (hobi) {
-      filterQuery.hobi = Like(`%${hobi}%`);
-    }
-
-    if (status) {
-      filterQuery.status = Like(`%${status}%`);
-    }
-
-    const res = await this.latihanRepository.find({
-      where: keyword ? keywordQuery : filterQuery,
-    });
-
-    return {
-      status: 'Success',
-      message: 'list',
-      data: res,
-    };
+  // --- Keyword global search ---
+  if (keyword) {
+    keywordQuery.push(
+      { title: Like(`%${keyword}%`) },
+      { name: Like(`%${keyword}%`) },
+    
+      { alamat: Like(`%${keyword}%`) },
+      { umur: Like(`%${keyword}%`) },
+    
+    );
   }
+
+  // --- Filter per field ---
+  if (title) filterQuery.title = Like(`%${title}%`);
+  if (name) filterQuery.name = Like(`%${name}%`);
+ 
+  if (alamat) filterQuery.alamat = Like(`%${alamat}%`);
+  if (umur) filterQuery.umur = Like(`%${umur}%`);
+ 
+
+  // --- Pagination setup ---
+  const take = Number(limit);
+  const skip = (Number(page) - 1) * take;
+
+  // --- Hitung total data ---
+  const [data, total] = await this.latihanRepository.findAndCount({
+    where: keyword ? keywordQuery : filterQuery,
+    take,
+    skip,
+    order: {
+      id: 'DESC',
+    },
+  });
+
+  return {
+    status: 'Success',
+    message: 'List latihan berhasil diambil',
+    data: data,
+    meta: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      lastPage: Math.ceil(total / take),
+    },
+  };
+}
+
 
   async getDetail(id: number): Promise<ResponseSuccess> {
     const res = await this.latihanRepository.findOne({

@@ -9,5 +9,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.DB_DATABASE,
   entities: [Latihan],
   synchronize: true,
-  logging: true,
+  // logging: true,
 };
